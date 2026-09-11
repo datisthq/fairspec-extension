@@ -18,7 +18,7 @@ export default defineConfig({
       title: "Changelog",
       prefix: "/changelog/",
       type: "changelog",
-      source: packageJson.repository,
+      source: "CHANGELOG.md",
       version: true,
       icon: "history",
     },
