@@ -40,6 +40,26 @@ its area:
 - Use strict TypeScript with null checks but don't add explicit return types to functions
 - Never use TypeScript `any`, type casting `as`, or `!` without permission
 
+## Releases
+
+Conventional Commits drive [release-please](https://github.com/googleapis/release-please): a
+`feat` or `fix` landing on `main` opens a Release PR. **Merging that PR is the gate** — it bumps
+all four version files, tags the release, publishes the npm and PyPI packages, and deploys the
+site. Nothing ships until you merge.
+
+- **IMPORTANT: only changes to the normative artifacts use `feat` or `fix`** — `docs/profiles/`,
+  `docs/schemas/`, and the specification prose. Everything else MUST be `chore` or `docs`: the
+  website, `examples/`, `README.md`, CI and workflows, release config, dependencies, tooling,
+  this file
+- This is not a style preference. release-please reads the commit type, and a `fix:` on a workflow
+  file announces a specification change that did not happen and burns a version number that can
+  never be reused
+- The Release PR carries a second commit from `github-actions[bot]` with the regenerated packages
+  — the new `.livemark/public/profiles/<version>/` and `schemas/<version>/`, the TypeScript and
+  Python models, and the specification markdown. **Review that diff as the release itself**
+- Never run `pnpm generate` by hand to bump a version, and never hand-edit
+  `.release/manifest.json` — release-please owns both
+
 ## Docs
 
 - Add Typedoc comments only for public APIs and don't add them for files or use @params directives
