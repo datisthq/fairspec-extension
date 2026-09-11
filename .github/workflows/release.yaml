@@ -12,18 +12,75 @@ jobs:
 
   release:
     needs: [test]
-    environment: release
     runs-on: ubuntu-latest
 
     outputs:
-      created: ${{ steps.release.outputs.new_release_published }}
-      version: ${{ steps.release.outputs.new_release_version }}
+      created: ${{ steps.release.outputs.release_created }}
+      version: ${{ steps.release.outputs.version }}
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Release Project
+        uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4.4.0
+        id: release
+        with:
+          config-file: .release/config.json
+          manifest-file: .release/manifest.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find Release Branch
+        id: branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          name=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --json headRefName \
+            --jq '[.[] | select(.headRefName | startswith("release-please"))][0].headRefName')
+          echo "name=${name:-}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Release Branch
+        if: steps.branch.outputs.name != ''
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          ref: ${{ steps.branch.outputs.name }}
+      - name: Setup Uv
+        if: steps.branch.outputs.name != ''
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - name: Setup Pnpm
+        if: steps.branch.outputs.name != ''
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - name: Setup Node
+        if: steps.branch.outputs.name != ''
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          cache: pnpm
+          node-version-file: package.json
+      - name: Install Dependencies
+        if: steps.branch.outputs.name != ''
+        run: pnpm install
+      - name: Generate Packages
+        if: steps.branch.outputs.name != ''
+        run: pnpm generate
+      - name: Commit Packages
+        if: steps.branch.outputs.name != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/profiles docs/specification .livemark/public/profiles \
+            .livemark/public/schemas typescript/models python
+          git diff --cached --quiet || git commit -m "chore: generate the versioned packages"
+          git push
+
+  publish:
+    needs: [release]
+    if: needs.release.outputs.created == 'true'
+    environment: release
+    runs-on: ubuntu-latest
 
     permissions:
       id-token: write
-      contents: write
-      issues: write
-      pull-requests: write
 
     steps:
       - name: Checkout Repo
@@ -39,11 +96,10 @@ jobs:
           node-version-file: package.json
       - name: Install Dependencies
         run: pnpm install
-      - name: Release Extension
-        uses: cycjimmy/semantic-release-action@ba330626c4750c19d8299de843f05c7aa5574f62 # v5
-        id: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Packages
+        run: pnpm /build/
+      - name: Publish Packages
+        run: pnpm /release/
 
   deploy:
     needs: [release]
@@ -71,12 +127,6 @@ jobs:
           node-version-file: package.json
       - name: Install Dependencies
         run: pnpm install
-      - name: Set Version
-        if: needs.release.outputs.created == 'true'
-        run: pnpm /vers/ ${{ needs.release.outputs.version }}
-      - name: Generate Packages
-        if: needs.release.outputs.created == 'true'
-        run: pnpm generate
       - name: Build Website
         run: pnpm docs:build
         env:
