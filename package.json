@@ -47,7 +47,7 @@
     "react-dom": "19.2.4",
     "remark": "15.0.1",
     "replace-in-file": "8.3.0",
-    "smol-toml": "1.4.2",
+    "smol-toml": "1.7.1",
     "tasuku": "2.0.5",
     "ts-to-zod": "5.1.0",
     "vite": "catalog:",
