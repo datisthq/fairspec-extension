@@ -72,4 +72,5 @@ messages.js
 tmuxp.yaml
 /.livemark/build/
 /.claude/
+/.cursor/
 .tanstack/
