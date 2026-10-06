@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/datisthq/fairspec-extension/compare/v0.4.0...v0.4.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **ci:** look up the release PR instead of reading the action output ([5c6487d](https://github.com/datisthq/fairspec-extension/commit/5c6487d4647f06f9ff486517a238b7422f260711))
+
 ## [0.4.0](https://github.com/fairspec/fairspec-extension/compare/v0.3.0...v0.4.0) (2026-01-22)
 
 ### Features
